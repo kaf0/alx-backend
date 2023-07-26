@@ -1,40 +1,41 @@
-#!/usr/bin/python3
-""" Python caching systems """
+#!/usr/bin/env python3
+""" caching system
+    """
+
 from base_caching import BaseCaching
-from collections import OrderedDict
 
 
 class LFUCache(BaseCaching):
-    """ LFU caching system
+    """ caching system:
+
+    Args:
+        LFUCache ([class]): [basic caching]
     """
-    def __init__(self):
-        """ Initialize class instance. """
+
+    def __init__(self) -> None:
+        """ initialize of class """
+        self.temp_list = {}
         super().__init__()
-        self.cache_data = OrderedDict()
-        self.mru = ""
 
     def put(self, key, item):
         """ Add an item in the cache
         """
-        if key and item:
-            if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
-                if key in self.cache_data:
-                    self.cache_data.update({key: item})
-                    self.mru = key
-                else:
-                    # discard the most recently used item
-                    discarded = self.mru
-                    del self.cache_data[discarded]
-                    print("DISCARD: {}".format(discarded))
-                    self.cache_data[key] = item
-                    self.mru = key
+        if not (key is None or item is None):
+            self.cache_data[key] = item
+            if len(self.cache_data.keys()) > self.MAX_ITEMS:
+                pop = min(self.temp_list, key=self.temp_list.get)
+                self.temp_list.pop(pop)
+                self.cache_data.pop(pop)
+                print(f"DISCARD: {pop}")
+            if not (key in self.temp_list):
+                self.temp_list[key] = 0
             else:
-                self.cache_data[key] = item
-                self.mru = key
+                self.temp_list[key] += 1
 
     def get(self, key):
         """ Get an item by key
         """
-        if key in self.cache_data:
-            self.mru = key
-            return self.cache_data[key]
+        if (key is None) or not (key in self.cache_data):
+            return None
+        self.temp_list[key] += 1
+        return self.cache_data.get(key)
